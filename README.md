@@ -1,375 +1,173 @@
-# Medical CV System API
+# **Medical CV System – API & Architecture Specification**
 
-A comprehensive medical record management system with hierarchical role-based access control and institution-specific management.
+A **comprehensive, secure, and scalable medical record management system** designed with **hierarchical role-based access control (RBAC)**, **institution-specific operations**, and **cross-institution patient data sharing**. The system supports **Next.js/React frontend** and **React Native mobile applications**, and complies with **privacy regulations (GDPR)**.
 
-## Features
+---
 
-- **Default Admin System**: Pre-configured admin (admin/admin) with full system access
-- **Hierarchical Role System**: Admin → Institution Admin → Medical Staff → Patients
-- **Institution Isolation**: Users can only access their institution's data
-- **Permission-Based Access**: Granular permissions for different operations
-- **Unified Patient Records**: Single comprehensive medical record per patient
-- **JWT Authentication**: Secure API access with JSON Web Tokens
-- **React Native Ready**: Patient app endpoints for mobile access
+## **1. Key Features**
 
-## System Architecture
+- **Preconfigured Super Admin**: Default credentials with full system access for initial setup.
+- **Hierarchical Role System**:
 
-### Role Hierarchy
+  - **Super Admin (System Administrator)** – Full control across all institutions.
+  - **Institution Admin** – Manages data within their institution and has cross-institution read access and manages patient records assigned to them.
+  - **Patient** – Can view their own medical history via secure endpoints.
+
+- **Permission-Based Access**: Granular permission control for all operations.
+- **Unified Patient Records**: One patient profile across institutions, ensuring seamless history tracking.
+- **JWT Authentication**: Token-based authentication for web and mobile clients.
+- **React Native & Next.js Ready**: Mobile endpoints, responsive design, and TypeScript-ready API contracts.
+- **Cross-Institution Access**: Authorized institution admins and doctors can view patients’ data across institutions.
+- **Consent Management**: GDPR-compliant consent system with emergency override logging.
+
+---
+
+## **2. System Architecture**
+
+### **Role Hierarchy**
+
 ```
 admin (super admin)
 ├── admin_institutions (institution admin)
-│   ├── doctor
-│   ├── nurse
-│   ├── receptionist
-│   └── patient (read-only)
+│
 ```
 
-### Default Admin
+### **Default Admin Account**
+
 - **Email**: `admin@medicalcv.com`
 - **Password**: `admin`
-- **Permissions**: All system permissions
+- **Permissions**: All available system permissions.
 
-### API Structure
+---
+
+## **3. Final API Structure**
+
 ```
 /api/v1/
-├── auth/                    # Authentication
-├── admin/                   # Super admin operations
-│   ├── roles/              # Role management
-│   ├── users/              # User management
-│   └── institutions/       # Institution management
-├── institutions/           # Institution-specific resources
-│   ├── /                   # Admin: List/Create institutions
-│   ├── /:id                # Admin: Get/Update/Delete institution
-│   ├── /medical-records/patient/:patientId  # Public: Patient access
-│   └── /:institutionId/    # Institution-specific resources
-│       ├── users/          # Institution user management
-│       ├── patients/       # Patient management
-│       ├── doctors/        # Doctor management
-│       └── medical-records/ # Medical records
+├── auth/                     # Authentication
+│   ├── POST /sign-in         # The admin give a credentials for each Institution created and patient
+│   └── POST /sign-out
+
+├── admin/                    # Super Admin Only
+│   ├── roles/                # Role management (CRUD for institution_admin only)
+│   ├── users/                # Global user management (CRUD for institution_admin only)
+│   └── institutions/         # Global institution management
+
+├── institutions/             # Institution CRUD (Admin only)
+│   ├── GET|POST|PUT|DELETE
+
+├── patients/                 # Shared patient profiles via institutions but secured if the user not an institution_admin
+│   ├── GET /                 # List all (privacy-filtered)
+│   ├── GET /:id               # View details
+│   ├── POST /                 # Create patient
+│   ├── PUT /:id               # Update
+│   ├── DELETE /:id            # Delete
+│   ├── POST /:id/emergency-access # Emergency override
+│   └── GET /:patientId/export # GDPR export
+
+├── doctors/                  # Shared doctor profiles and edited with CRUD by institution_admin
+│   ├── CRUD operations
+
+├── medical-records/          # Shared medical records and edited with CRUD by institution_admin
+│   ├── GET /                 # All records (privacy-filtered)
+│   ├── GET /:id               # Record details
+│   ├── POST /                 # Create record
+│   ├── PUT /:id               # Update record
+│   ├── DELETE /:id            # Delete record
+│   └── GET /patient/:id       # Public patient history
+
+├── patients/:patientId/medical-records/ # Patient-specific record creation
+
+└── consents/                  # Consent management
+    ├── POST /grant
+    ├── POST /withdraw
+    └── GET /patient/:id
 ```
 
-## API Endpoints
+---
 
-### Authentication
-```
-POST /api/v1/auth/sign-up     # Register new user (with role & institution)
-POST /api/v1/auth/sign-in     # Login user
-POST /api/v1/auth/sign-out    # Logout user
-```
+## **4. Role-Based Permissions**
 
-### Admin Operations (Super Admin Only)
-```
-GET    /api/v1/admin/roles              # Get all roles
-GET    /api/v1/admin/roles/:id          # Get specific role
-POST   /api/v1/admin/roles              # Create role
-PUT    /api/v1/admin/roles/:id          # Update role
-DELETE /api/v1/admin/roles/:id          # Delete role
+### **Permission Matrix**
 
-GET    /api/v1/admin/users              # Get all users
-GET    /api/v1/admin/users/:id          # Get specific user
-POST   /api/v1/admin/users              # Create user
-PUT    /api/v1/admin/users/:id          # Update user
-DELETE /api/v1/admin/users/:id          # Delete user
+| Permission                 | Description                           |
+| -------------------------- | ------------------------------------- |
+| `manage_patients`          | Create, read, update, delete patients |
+| `manage_doctors`           | CRUD operations on doctors            |
+| `manage_medical_records`   | CRUD medical records                  |
+| `manage_users`             | CRUD users                            |
+| `view_statistics`          | System statistics and reports         |
+| `manage_institutions`      | Institution CRUD                      |
+| `manage_roles`             | Role CRUD                             |
+| `cross_institution_access` | View other institution data           |
+| `cross_institution_modify` | Modify other institution data         |
+| `audit_access`             | View audit logs                       |
+| `emergency_override`       | Override privacy restrictions         |
+| `consent_management`       | Manage patient consent                |
+| `data_export`              | GDPR patient data export              |
 
-GET    /api/v1/admin/institutions       # Admin institution management
-GET    /api/v1/admin/statistics         # System statistics
-```
+---
 
-### Institution Management (Admin Only)
-```
-GET    /api/v1/institutions              # Get all institutions
-GET    /api/v1/institutions/:id          # Get specific institution
-POST   /api/v1/institutions              # Create institution
-PUT    /api/v1/institutions/:id          # Update institution
-DELETE /api/v1/institutions/:id          # Delete institution
-```
+## **5. Security & Compliance**
 
-### Institution-Specific Resources
+- **JWT Authentication** with short-lived access tokens & refresh tokens.
+- **Role & Permission Enforcement** at middleware level.
+- **Granular Consent** for data sharing.
+- **Emergency Override** with mandatory audit logging.
+- **Audit Trails** for all data access/modification.
+- **Rate Limiting** & IP whitelisting for sensitive endpoints.
+- **Data Encryption** at rest and in transit (TLS/SSL).
+- **GDPR Compliance** with export & deletion features.
+- **Security Headers** via Helmet (HSTS, CSP, etc.).
 
-#### Institution Users (Institution Admin)
-```
-GET    /api/v1/institutions/:institutionId/users              # Get institution's users
-GET    /api/v1/institutions/:institutionId/users/:id          # Get specific user
-POST   /api/v1/institutions/:institutionId/users              # Create user
-PUT    /api/v1/institutions/:institutionId/users/:id          # Update user
-DELETE /api/v1/institutions/:institutionId/users/:id          # Delete user
-```
+---
 
-#### Patients (Medical Staff)
-```
-GET    /api/v1/institutions/:institutionId/patients              # Get institution's patients
-GET    /api/v1/institutions/:institutionId/patients/:id          # Get specific patient
-POST   /api/v1/institutions/:institutionId/patients              # Create patient
-PUT    /api/v1/institutions/:institutionId/patients/:id          # Update patient
-DELETE /api/v1/institutions/:institutionId/patients/:id          # Delete patient
-```
+## **6. Database Schema**
 
-#### Doctors (Medical Staff)
-```
-GET    /api/v1/institutions/:institutionId/doctors               # Get institution's doctors
-GET    /api/v1/institutions/:institutionId/doctors/:id           # Get specific doctor
-POST   /api/v1/institutions/:institutionId/doctors               # Create doctor
-PUT    /api/v1/institutions/:institutionId/doctors/:id           # Update doctor
-DELETE /api/v1/institutions/:institutionId/doctors/:id           # Delete doctor
-```
+### **User Schema**
 
-#### Medical Records (Medical Staff)
-```
-GET    /api/v1/institutions/:institutionId/medical-records       # Get institution's records
-GET    /api/v1/institutions/:institutionId/medical-records/:id   # Get specific record
-POST   /api/v1/institutions/:institutionId/medical-records       # Create record
-PUT    /api/v1/institutions/:institutionId/medical-records/:id   # Update record
-DELETE /api/v1/institutions/:institutionId/medical-records/:id   # Delete record
-```
-
-### Public Patient Access (React Native)
-```
-GET    /api/v1/institutions/medical-records/patient/:patientId  # Get patient's own records
-```
-
-## Installation & Setup
-
-### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB
-- npm or yarn
-
-### Environment Variables
-Create `.env.development.local` file:
-```env
-PORT=5500
-NODE_ENV=development
-DB_URI=mongodb://localhost:27017/medical_cv_system
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
-```
-
-### Installation
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Start production server
-npm start
-```
-
-## API Usage Examples
-
-### 1. Login as Default Admin
-```bash
-curl -X POST http://localhost:5500/api/v1/auth/sign-in \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@medicalcv.com",
-    "password": "admin"
-  }'
-```
-
-### 2. Create Institution (Admin Only)
-```bash
-curl -X POST http://localhost:5500/api/v1/institutions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
-  -d '{
-    "name": "City General Hospital",
-    "type": "hospital",
-    "contact": {
-      "address": "123 Medical Center Dr",
-      "phone": "+1-555-123-4567",
-      "email": "info@cityhospital.com"
-    },
-    "services": ["emergency", "surgery", "cardiology"]
-  }'
-```
-
-### 3. Create Institution Admin
-```bash
-curl -X POST http://localhost:5500/api/v1/admin/users \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
-  -d '{
-    "name": "Dr. Sarah Johnson",
-    "email": "sarah@cityhospital.com",
-    "password": "password123",
-    "role": "admin_institutions",
-    "institutionId": "INSTITUTION_OBJECT_ID",
-    "permissions": [
-      "manage_patients",
-      "manage_doctors",
-      "manage_medical_records",
-      "manage_users"
-    ]
-  }'
-```
-
-### 4. Create Medical Staff (Institution Admin)
-```bash
-curl -X POST http://localhost:5500/api/v1/institutions/INSTITUTION_ID/users \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer INSTITUTION_ADMIN_JWT_TOKEN" \
-  -d '{
-    "name": "Dr. Michael Brown",
-    "email": "michael@cityhospital.com",
-    "password": "password123",
-    "role": "doctor",
-    "permissions": [
-      "manage_patients",
-      "manage_medical_records"
-    ]
-  }'
-```
-
-### 5. Create Patient (Medical Staff)
-```bash
-curl -X POST http://localhost:5500/api/v1/institutions/INSTITUTION_ID/patients \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer MEDICAL_STAFF_JWT_TOKEN" \
-  -d '{
-    "patientId": "P001",
-    "name": "John Smith",
-    "dateOfBirth": "1985-03-15",
-    "gender": "male",
-    "bloodType": "A+",
-    "contact": {
-      "phone": "+1-555-111-2222",
-      "email": "john@email.com",
-      "address": "789 Oak Street"
-    }
-  }'
-```
-
-### 6. Create Doctor (Medical Staff)
-```bash
-curl -X POST http://localhost:5500/api/v1/institutions/INSTITUTION_ID/doctors \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer MEDICAL_STAFF_JWT_TOKEN" \
-  -d '{
-    "name": "Dr. Emily Davis",
-    "email": "emily@cityhospital.com",
-    "specialization": "Cardiology",
-    "licenseNumber": "MD123456",
-    "phone": "+1-555-987-6543"
-  }'
-```
-
-### 7. Create Medical Record (Medical Staff)
-```bash
-curl -X POST http://localhost:5500/api/v1/institutions/INSTITUTION_ID/medical-records \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer MEDICAL_STAFF_JWT_TOKEN" \
-  -d '{
-    "patientId": "P001",
-    "doctorId": "DOCTOR_OBJECT_ID",
-    "visitInfo": {
-      "type": "consultation",
-      "date": "2024-01-15",
-      "isEmergency": false
-    },
-    "clinicalData": {
-      "symptoms": "Fever and cough",
-      "diagnosis": "Common cold",
-      "treatment": "Rest and fluids"
-    }
-  }'
-```
-
-### 8. Patient Access (React Native App)
-```bash
-curl -X GET "http://localhost:5500/api/v1/institutions/medical-records/patient/P001"
-```
-
-## Role-Based Access Control
-
-### Admin (Super Admin) Permissions
-- ✅ Create, read, update, delete institutions
-- ✅ Manage all users across all institutions
-- ✅ Create and manage roles
-- ✅ View system statistics
-- ✅ Access any institution's data
-- ✅ Manage permissions
-
-### Institution Admin Permissions
-- ❌ Cannot manage institutions
-- ✅ Manage users within their institution
-- ✅ CRUD operations on their institution's patients
-- ✅ CRUD operations on their institution's doctors
-- ✅ CRUD operations on their institution's medical records
-- ❌ Cannot access other institutions' data
-
-### Medical Staff Permissions (Doctor, Nurse)
-- ❌ Cannot manage users
-- ✅ CRUD operations on their institution's patients
-- ✅ CRUD operations on their institution's doctors
-- ✅ CRUD operations on their institution's medical records
-- ❌ Cannot access other institutions' data
-
-### Patient Permissions
-- ❌ Cannot access institution data
-- ✅ Read their own medical records via public endpoint
-
-## Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Role-Based Access**: Different permissions for different user types
-- **Institution Isolation**: Users can only access their institution's data
-- **Permission-Based Access**: Granular permissions for specific operations
-- **Input Validation**: Comprehensive data validation
-- **Error Handling**: Proper error responses
-- **Rate Limiting**: API rate limiting to prevent abuse
-- **CORS**: Cross-origin resource sharing configuration
-- **Helmet**: Security headers
-
-## Database Schema
-
-### User Schema
 ```javascript
 {
   name: String,
   email: String,
   password: String,
-  role: String,              // 'admin', 'admin_institutions', 'doctor', 'nurse', 'receptionist', 'patient'
-  institutionId: ObjectId,   // Required for non-admin users
-  permissions: Array,        // Array of permission strings
-  isActive: Boolean,
-  lastLogin: Date,
-  createdBy: ObjectId        // Links to user who created this user
+  role: ['admin', 'admin_institutions'],              //Only 'admin', 'admin_institutions'
+  permissions: [String]
 }
 ```
 
-### Role Schema
+### **Role Schema**
+
 ```javascript
 {
-  name: String,              // Unique role name
-  displayName: String,       // Human-readable name
+  name: String,
+  displayName: String,
   description: String,
-  permissions: Array,        // Array of permission strings
-  isActive: Boolean,
-  isSystem: Boolean,         // System roles cannot be deleted
-  createdBy: ObjectId        // Links to user who created this role
+  permissions: [String],
+  isSystem: Boolean
 }
 ```
 
-### Patient Schema
+### **Patient Schema**
+
 ```javascript
 {
   patientId: String,
   name: String,
   dateOfBirth: Date,
-  gender: String,
+  gender: String,            // 'male' or 'female'
+  isPregnant: Boolean,       // Required if gender is female
   bloodType: String,
   contact: Object,
   emergencyContact: Object,
   allergies: String,
   insuranceInfo: Object,
-  institutionId: ObjectId,   // Links to institution
-  updatedBy: ObjectId        // Links to user
+  updatedBy: ObjectId
 }
 ```
 
-### Doctor Schema
+### **Doctor Schema**
+
 ```javascript
 {
   name: String,
@@ -378,83 +176,107 @@ curl -X GET "http://localhost:5500/api/v1/institutions/medical-records/patient/P
   licenseNumber: String,
   phone: String,
   address: String,
-  institutionId: ObjectId,   // Links to institution
-  isActive: Boolean
+  institutionId: ObjectId
 }
 ```
 
-### Medical Record Schema
+### **Medical Record Schema**
+
 ```javascript
 {
   patientId: String,
-  doctorId: ObjectId,        // Links to doctor
-  institutionId: ObjectId,   // Links to institution
+  doctorId: ObjectId,
+  institutionId: ObjectId,
   visitInfo: Object,
   clinicalData: Object,
   prescriptions: Array,
   labResults: Array,
   attachments: Array,
-  createdBy: ObjectId,       // Links to user
-  updatedBy: ObjectId        // Links to user
+  createdBy: ObjectId,
+  updatedBy: ObjectId
 }
 ```
 
-## Error Handling
+---
 
-The API returns consistent error responses:
+## **7. MongoDB Indexes** (Performance Optimization)
 
-```javascript
+- **Patients**: `patientId`, `institutionId+updatedAt`, `name text`, `contact.phone`.
+- **Medical Records**: `patientId+visitInfo.date`, `doctorId+visitInfo.date`, `institutionId+visitInfo.date`.
+- **Doctors**: `institutionId`, `specialization`, `licenseNumber`.
+- **Users**: `email`, `role`.
+- **Consents**: `patientId+consentType+granted`, `expiresAt`.
+- **Audit Logs**: `userId+timestamp`, `action+timestamp`.
+
+---
+
+## **8. Frontend Implementation (Next.js + React Native)**
+
+✅ TypeScript API contracts
+✅ Auth context & hooks
+✅ Patient, Doctor, and Medical Record CRUD UIs
+✅ Consent management pages
+✅ Emergency access interface
+✅ Admin audit log viewer
+✅ Responsive design with accessibility features
+✅ Integration tests with Cypress/Jest
+
+---
+
+## **9. Error Handling**
+
+**Response Format**
+
+```json
 {
   "success": false,
-  "error": "Error message here"
+  "error": "Error message"
 }
 ```
 
-Common HTTP status codes:
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request
-- `401`: Unauthorized
-- `403`: Forbidden (Insufficient permissions)
-- `404`: Not Found
-- `409`: Conflict
-- `500`: Internal Server Error
+**Status Codes**
 
-## Development
+- `200` OK
+- `201` Created
+- `400` Bad Request
+- `401` Unauthorized
+- `403` Forbidden
+- `404` Not Found
+- `409` Conflict
+- `500` Internal Server Error
 
-### Project Structure
+---
+
+## **10. Development Workflow**
+
+1. **Model** → `models/`
+2. **Controller** → `controllers/`
+3. **Route** → `routes/`
+4. **Middleware** → Role & permission checks
+5. **Test** → Postman or automated test suite
+
+**Project Structure**
+
 ```
 backend/
-├── app.js                    # Main application file
+├── app.js
 ├── config/
-│   └── env.js              # Environment configuration
-├── controllers/             # Route controllers
-│   ├── admin/              # Admin controllers
-│   └── institution/        # Institution controllers
+├── controllers/
 ├── database/
-│   └── mongodb.js          # Database connection
-├── middlewares/            # Custom middlewares
-├── models/                 # Mongoose models
-├── routes/                 # API routes
-└── utils/                  # Utility functions
+├── middlewares/
+├── models/
+├── routes/
+└── utils/
 ```
 
-### Adding New Features
+---
 
-1. **Create Model**: Define schema in `models/`
-2. **Create Controller**: Implement business logic in `controllers/`
-3. **Create Routes**: Define endpoints in `routes/`
-4. **Add Authorization**: Use appropriate middleware
-5. **Test**: Use Postman or curl to test endpoints
+## **11. Advantages of This Architecture**
 
-## Contributing
+1. **Unified Healthcare Records** – Eliminates duplicate records, enables seamless care.
+2. **Privacy-First Design** – Consent management, GDPR compliance, audit trails.
+3. **Scalable & Modular** – RESTful API with clear separation of concerns.
+4. **Enterprise Security** – Encryption, RBAC, and advanced permissions.
+5. **Multi-Platform Ready** – Web and mobile apps with shared backend.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the ISC License.
+---

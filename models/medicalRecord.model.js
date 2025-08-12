@@ -33,14 +33,10 @@ const AttachmentSchema = new mongoose.Schema(
 
 const MedicalRecordSchema = new mongoose.Schema({
   patientId: { type: String, required: true },
+  // add institution id if that needed
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Doctor",
-    required: true,
-  },
-  institutionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Institution",
     required: true,
   },
 
@@ -78,8 +74,8 @@ const MedicalRecordSchema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Institution" },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Institution" },
 });
 
 export default mongoose.model("MedicalRecord", MedicalRecordSchema);
