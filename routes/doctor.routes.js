@@ -1,7 +1,6 @@
-// routes/doctor.routes.js - Global Doctor Routes
 import { Router } from "express";
 import authorize from "../middlewares/auth.middleware.js";
-import { requirePermission } from "../middlewares/role.middleware.js";
+import { requireInstitutionAdmin } from "../middlewares/role.middleware.js";
 
 import {
   getDoctors,
@@ -13,13 +12,13 @@ import {
 
 const doctorRouter = Router();
 
-doctorRouter.use(authorize);
+doctorRouter.use(authorize, requireInstitutionAdmin);
 
 // Global doctor routes
-doctorRouter.get("/", requirePermission("manage_doctors"), getDoctors);
-doctorRouter.get("/:id", requirePermission("manage_doctors"), getDoctor);
-doctorRouter.post("/", requirePermission("manage_doctors"), createDoctor);
-doctorRouter.put("/:id", requirePermission("manage_doctors"), updateDoctor);
-doctorRouter.delete("/:id", requirePermission("manage_doctors"), deleteDoctor);
+doctorRouter.get("/", getDoctors);
+doctorRouter.get("/:id", getDoctor);
+doctorRouter.post("/", createDoctor);
+doctorRouter.put("/:id", updateDoctor);
+doctorRouter.delete("/:id", deleteDoctor);
 
 export default doctorRouter;

@@ -108,19 +108,60 @@ export const createDoctor = async (req, res, next) => {
   }
 };
 
-// Update doctor for a specific institution
+// // Update doctor for a specific institution
+// export const updateDoctor = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = {
+//       ...req.body,
+//       updatedAt: new Date(),
+//     };
+
+//     const doctor = await Doctor.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//       runValidators: true,
+//     }).populate("institutionId", "name type");
+
+//     if (!doctor) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Doctor not found",
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Doctor updated successfully",
+//       data: doctor,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 export const updateDoctor = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateData = {
-      ...req.body,
-      updatedAt: new Date(),
-    };
+    const { institutionId, ...updateData } = req.body;
 
-    const doctor = await Doctor.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate("institutionId", "name type");
+    let doctor;
+
+    if (institutionId) {
+      doctor = await Doctor.findByIdAndUpdate(
+        id,
+        {
+          $addToSet: { institutionIds: institutionId }, // adds only if not already present
+          ...updateData,
+          updatedAt: new Date(),
+        },
+        { new: true, runValidators: true }
+      ).populate("institutionIds", "name type");
+    } else {
+      doctor = await Doctor.findByIdAndUpdate(
+        id,
+        { ...updateData, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      ).populate("institutionIds", "name type");
+    }
 
     if (!doctor) {
       return res.status(404).json({

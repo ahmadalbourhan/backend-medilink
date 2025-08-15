@@ -33,7 +33,7 @@ const AttachmentSchema = new mongoose.Schema(
 
 const MedicalRecordSchema = new mongoose.Schema({
   patientId: { type: String, required: true },
-  // add institution id if that needed
+  institutionId: { type: mongoose.Schema.Types.ObjectId, ref: "Institution" },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Doctor",

@@ -42,7 +42,7 @@ admin (super admin)
 
 ## **3. Final API Structure**
 
-```
+````
 /api/v1/
 ├── auth/                     # Authentication
 │   ├── POST /sign-in         # The admin give a credentials for each Institution created and patient
@@ -62,7 +62,6 @@ admin (super admin)
 │   ├── POST /                 # Create patient
 │   ├── PUT /:id               # Update
 │   ├── DELETE /:id            # Delete
-│   ├── POST /:id/emergency-access # Emergency override
 │   └── GET /:patientId/export # GDPR export
 
 ├── doctors/                  # Shared doctor profiles and edited with CRUD by institution_admin
@@ -78,33 +77,22 @@ admin (super admin)
 
 ├── patients/:patientId/medical-records/ # Patient-specific record creation
 
-└── consents/                  # Consent management
-    ├── POST /grant
-    ├── POST /withdraw
-    └── GET /patient/:id
-```
-
 ---
 
 ## **4. Role-Based Permissions**
 
 ### **Permission Matrix**
 
-| Permission                 | Description                           |
-| -------------------------- | ------------------------------------- |
-| `manage_patients`          | Create, read, update, delete patients |
-| `manage_doctors`           | CRUD operations on doctors            |
-| `manage_medical_records`   | CRUD medical records                  |
-| `manage_users`             | CRUD users                            |
-| `view_statistics`          | System statistics and reports         |
-| `manage_institutions`      | Institution CRUD                      |
-| `manage_roles`             | Role CRUD                             |
-| `cross_institution_access` | View other institution data           |
-| `cross_institution_modify` | Modify other institution data         |
-| `audit_access`             | View audit logs                       |
-| `emergency_override`       | Override privacy restrictions         |
-| `consent_management`       | Manage patient consent                |
-| `data_export`              | GDPR patient data export              |
+| Permission               | Description                           |
+| ------------------------ | ------------------------------------- |
+| `manage_patients`        | Create, read, update, delete patients |
+| `manage_doctors`         | CRUD operations on doctors            |
+| `manage_medical_records` | CRUD medical records                  |
+| `manage_users`           | CRUD users                            |
+| `view_statistics`        | System statistics and reports         |
+| `manage_institutions`    | Institution CRUD                      |
+| `manage_roles`           | Role CRUD                             |
+| `data_export`            | GDPR patient data export              |
 
 ---
 
@@ -134,7 +122,7 @@ admin (super admin)
   role: ['admin', 'admin_institutions'],              //Only 'admin', 'admin_institutions'
   permissions: [String]
 }
-```
+````
 
 ### **Role Schema**
 
@@ -205,78 +193,5 @@ admin (super admin)
 - **Medical Records**: `patientId+visitInfo.date`, `doctorId+visitInfo.date`, `institutionId+visitInfo.date`.
 - **Doctors**: `institutionId`, `specialization`, `licenseNumber`.
 - **Users**: `email`, `role`.
-- **Consents**: `patientId+consentType+granted`, `expiresAt`.
-- **Audit Logs**: `userId+timestamp`, `action+timestamp`.
-
----
-
-## **8. Frontend Implementation (Next.js + React Native)**
-
-✅ TypeScript API contracts
-✅ Auth context & hooks
-✅ Patient, Doctor, and Medical Record CRUD UIs
-✅ Consent management pages
-✅ Emergency access interface
-✅ Admin audit log viewer
-✅ Responsive design with accessibility features
-✅ Integration tests with Cypress/Jest
-
----
-
-## **9. Error Handling**
-
-**Response Format**
-
-```json
-{
-  "success": false,
-  "error": "Error message"
-}
-```
-
-**Status Codes**
-
-- `200` OK
-- `201` Created
-- `400` Bad Request
-- `401` Unauthorized
-- `403` Forbidden
-- `404` Not Found
-- `409` Conflict
-- `500` Internal Server Error
-
----
-
-## **10. Development Workflow**
-
-1. **Model** → `models/`
-2. **Controller** → `controllers/`
-3. **Route** → `routes/`
-4. **Middleware** → Role & permission checks
-5. **Test** → Postman or automated test suite
-
-**Project Structure**
-
-```
-backend/
-├── app.js
-├── config/
-├── controllers/
-├── database/
-├── middlewares/
-├── models/
-├── routes/
-└── utils/
-```
-
----
-
-## **11. Advantages of This Architecture**
-
-1. **Unified Healthcare Records** – Eliminates duplicate records, enables seamless care.
-2. **Privacy-First Design** – Consent management, GDPR compliance, audit trails.
-3. **Scalable & Modular** – RESTful API with clear separation of concerns.
-4. **Enterprise Security** – Encryption, RBAC, and advanced permissions.
-5. **Multi-Platform Ready** – Web and mobile apps with shared backend.
 
 ---

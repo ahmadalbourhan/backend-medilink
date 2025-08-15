@@ -1,4 +1,3 @@
-// Updated app.js with new route structure
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -52,7 +51,6 @@ app.get("/", (req, res) => {
       patients: "/api/v1/patients",
       doctors: "/api/v1/doctors",
       medicalRecords: "/api/v1/medical-records",
-      patientRecords: "/api/v1/patient-records/:patientId/medical-records",
       publicPatientAccess: "/api/v1/medical-records/patient/:patientId",
     },
   });
@@ -63,7 +61,7 @@ app.use(errorMiddleware);
 
 app.listen(PORT, async () => {
   console.log(
-    `Medical CV System API v1.0 is running on http://localhost:${PORT}`
+    `Medical CV System API v1.0.0 is running on http://localhost:${PORT}`
   );
   await connectToDatabase();
   await initializeDefaultAdmin();

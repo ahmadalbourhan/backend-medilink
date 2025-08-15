@@ -84,14 +84,16 @@ const patientSchema = new mongoose.Schema(
       policyNumber: String,
     },
     // Add institutionId to link patient to institution
-    institutionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Institution",
-      // Not required for super admin created patients
-      required: function () {
-        return this.updatedBy && this.updatedBy.role !== "admin";
+    institutionId: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Institution",
+        // Not required for super admin created patients
+        required: function () {
+          return this.updatedBy && this.updatedBy.role !== "admin";
+        },
       },
-    },
+    ],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     updatedBy: {

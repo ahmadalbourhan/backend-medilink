@@ -1,4 +1,3 @@
-// controllers/medicalRecord.controller.js - Updated for shared access
 import MedicalRecord from "../models/medicalRecord.model.js";
 import Patient from "../models/patient.model.js";
 import Doctor from "../models/doctor.model.js";
@@ -174,10 +173,15 @@ export const createMedicalRecord = async (req, res, next) => {
       updatedBy: req.user.institutionId,
     };
 
+    console.log("Creating medical record:", medicalRecordData);
     // Verify patient exists
     const patient = await Patient.findOne({
       patientId: medicalRecordData.patientId,
     });
+    console.log("Patient ID:", medicalRecordData.patientId);
+    console.log("Patient found:", patient ? patient.patientId : "Not found");
+    console.log("Found patient:", patient);
+
     if (!patient) {
       return res.status(404).json({
         success: false,

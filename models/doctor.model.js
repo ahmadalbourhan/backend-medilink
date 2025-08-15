@@ -24,12 +24,13 @@ const doctorSchema = new mongoose.Schema(
     },
     phone: String,
     address: String,
-    // Maybe same doctor linked to many institutions
-    institutionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Institution",
-      required: true,
-    },
+    institutionIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Institution",
+        required: true,
+      },
+    ],
   },
   {
     timestamps: true,
