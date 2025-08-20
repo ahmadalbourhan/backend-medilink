@@ -1,5 +1,6 @@
 import User from "../../models/user.model.js";
 import Institution from "../../models/institution.model.js";
+import bcrypt from "bcryptjs";
 
 // Get all users (admin only)
 export const getUsers = async (req, res, next) => {
@@ -82,9 +83,8 @@ export const createUser = async (req, res, next) => {
       }
     }
 
-    const bcrypt = await import("bcryptjs");
-    const salt = await bcrypt.default.genSalt(10);
-    const hashedPassword = await bcrypt.default.hash(password, salt);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const userData = {
       name,
@@ -113,7 +113,45 @@ export const createUser = async (req, res, next) => {
 
 // Update user
 export const updateUser = async (req, res, next) => {
-  res.send("Update user functionality is not implemented yet.");
+  try {
+    const { id } = req.params;
+    const { name, email, password, role, institutionId, permissions } =
+      req.body;
+
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (email !== undefined) update.email = email;
+    if (role !== undefined) update.role = role;
+    if (institutionId !== undefined) update.institutionId = institutionId;
+    if (permissions !== undefined) update.permissions = permissions;
+
+    // Only update password if provided
+    if (password && password.trim() !== "") {
+      const salt = await bcrypt.genSalt(10);
+      update.password = await bcrypt.hash(password, salt);
+    }
+
+    const updated = await User.findByIdAndUpdate(id, update, {
+      new: true,
+      runValidators: true,
+    })
+      .populate("institutionId", "name type")
+      .select("-password");
+
+    if (!updated) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Delete user

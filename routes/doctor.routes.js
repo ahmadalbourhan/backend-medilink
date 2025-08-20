@@ -1,6 +1,6 @@
 import { Router } from "express";
 import authorize from "../middlewares/auth.middleware.js";
-import { requireInstitutionAdmin } from "../middlewares/role.middleware.js";
+import { requireAdminOrInstitution } from "../middlewares/role.middleware.js";
 
 import {
   getDoctors,
@@ -12,7 +12,7 @@ import {
 
 const doctorRouter = Router();
 
-doctorRouter.use(authorize, requireInstitutionAdmin);
+doctorRouter.use(authorize, requireAdminOrInstitution);
 
 // Global doctor routes
 doctorRouter.get("/", getDoctors);

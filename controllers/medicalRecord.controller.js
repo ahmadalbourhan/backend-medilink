@@ -20,15 +20,20 @@ export const getMedicalRecords = async (req, res, next) => {
     if (patientId) filter.patientId = patientId;
     if (doctorId) filter.doctorId = doctorId;
 
-    // Institution admins can filter to see only their institution's records
-    if (req.user.role === "admin_institutions" && institutionFilter === "own") {
-      filter.institutionId = req.user.institutionId;
-    }
+    // // Institution admins can filter to see only their institution's records
+    // if (req.user.role === "admin_institutions" && institutionFilter === "own") {
+    //   filter.institutionId = req.user.institutionId;
+    // }
 
     const medicalRecords = await MedicalRecord.find(filter)
       .populate("doctorId", "name specialization")
       .populate("createdBy", "name")
       .populate("updatedBy", "name")
+      // .populate({
+      //   // path: "institutionId",
+      //   select: "name type contact",
+      // })
+      .populate("patient", "name dateOfBirth gender")
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ "visitInfo.date": -1 });
@@ -68,6 +73,7 @@ export const getPatientMedicalRecords = async (req, res, next) => {
         path: "institutionId",
         select: "name type contact",
       })
+      .populate("patient", "name dateOfBirth gender")
       .sort({ "visitInfo.date": -1 });
 
     res.status(200).json({

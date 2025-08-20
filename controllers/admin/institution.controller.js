@@ -1,5 +1,5 @@
-import User from "../models/user.model.js";
-import Institution from "../models/institution.model.js";
+import User from "../../models/user.model.js";
+import Institution from "../../models/institution.model.js";
 
 // Get all institutions
 export const getInstitutions = async (req, res, next) => {

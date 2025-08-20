@@ -1,28 +1,28 @@
 import { Router } from "express";
 import authorize from "../middlewares/auth.middleware.js";
-import { requireInstitutionAdmin } from "../middlewares/role.middleware.js";
+import { requireAdminOrInstitution } from "../middlewares/role.middleware.js";
 import {
   createPatient,
   deletePatient,
-  getPatient,
-  getPatients,
+  getPatientById,
+  getAllPatients,
   updatePatient,
 } from "../controllers/patient.controller.js";
 
 const patientRouter = Router();
 
 // All routes require authentication
-patientRouter.use(authorize, requireInstitutionAdmin);
+patientRouter.use(authorize, requireAdminOrInstitution);
 
 // Enhanced patient routes with proper security
-patientRouter.get("/", getPatients);
+patientRouter.get("/", getAllPatients);
 
-patientRouter.get("/:id", getPatient);
+patientRouter.get("/:patientId", getPatientById);
 
 patientRouter.post("/", createPatient);
 
-patientRouter.put("/:id", updatePatient);
+patientRouter.put("/:patientId", updatePatient);
 
-patientRouter.delete("/:id", deletePatient);
+patientRouter.delete("/:patientId", deletePatient);
 
 export default patientRouter;

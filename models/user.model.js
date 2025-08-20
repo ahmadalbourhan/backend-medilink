@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "User Password is required"],
+      required: function () {
+        // Password is required only for new documents
+        return this.isNew;
+      },
       minLength: 6,
     },
     role: {
@@ -33,23 +36,6 @@ const userSchema = new mongoose.Schema(
         return this.role !== "admin";
       },
     },
-    permissions: [
-      {
-        type: String,
-        enum: [
-          "manage_patients",
-          "manage_doctors",
-          "manage_medical_records",
-          "manage_users",
-          "view_statistics",
-          "manage_institutions",
-          "manage_roles",
-          "cross_institution_access",
-          "cross_institution_modify",
-          "emergency_override",
-        ],
-      },
-    ],
   },
   { timestamps: true }
 );

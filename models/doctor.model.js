@@ -13,6 +13,11 @@ const doctorSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    password: {
+      type: String,
+      required: true,
+      minLength: 6,
+    },
     specialization: {
       type: String,
       required: true,

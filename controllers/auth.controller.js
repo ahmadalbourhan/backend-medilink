@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Patient from "../models/patient.model.js";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../config/env.js";
 
 // Initialize default admin on first run
@@ -17,15 +18,6 @@ export const initializeDefaultAdmin = async () => {
         email: "admin@medicalcv.com",
         password: hashedPassword,
         role: "admin",
-        permissions: [
-          "manage_patients",
-          "manage_doctors",
-          "manage_medical_records",
-          "manage_users",
-          "view_statistics",
-          "manage_institutions",
-          "manage_roles",
-        ],
       });
 
       console.log("Default admin created: admin@medicalcv.com / admin");
@@ -39,10 +31,7 @@ export const signIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).populate(
-      "institutionId",
-      "name type"
-    );
+    const user = await User.findOne({ email });
 
     if (!user) {
       const error = new Error("User not found");
@@ -57,8 +46,6 @@ export const signIn = async (req, res, next) => {
       error.statusCode = 401;
       throw error;
     }
-
-    await user.save();
 
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
       expiresIn: JWT_EXPIRES_IN,
@@ -75,7 +62,54 @@ export const signIn = async (req, res, next) => {
           email: user.email,
           role: user.role,
           institutionId: user.institutionId,
-          permissions: user.permissions,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const signInPatientId = async (req, res, next) => {
+  try {
+    const { patientId, password } = req.body;
+
+    const patient = await Patient.findOne({ patientId });
+
+    if (!patient) {
+      const error = new Error("Patient not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, patient.password);
+
+    if (!isPasswordValid) {
+      const error = new Error("Invalid password");
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const token = jwt.sign(
+      { id: patient._id, patientId: patient.patientId },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    // Optionally track last login (field exists in schema)
+    patient.lastLogin = new Date();
+    await patient.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: {
+        token,
+        patient: {
+          _id: patient._id,
+          patientId: patient.patientId,
+          name: patient.name,
+          email: patient.contact.email,
         },
       },
     });

@@ -78,4 +78,16 @@ const MedicalRecordSchema = new mongoose.Schema({
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Institution" },
 });
 
+// Virtual for patient information
+MedicalRecordSchema.virtual("patient", {
+  ref: "Patient",
+  localField: "patientId",
+  foreignField: "patientId",
+  justOne: true,
+});
+
+// Ensure virtuals are included when converting to JSON
+MedicalRecordSchema.set("toJSON", { virtuals: true });
+MedicalRecordSchema.set("toObject", { virtuals: true });
+
 export default mongoose.model("MedicalRecord", MedicalRecordSchema);

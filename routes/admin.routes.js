@@ -2,15 +2,6 @@ import { Router } from "express";
 import authorize from "../middlewares/auth.middleware.js";
 import { requireAdmin } from "../middlewares/role.middleware.js";
 
-// Import admin controllers
-import {
-  getRoles,
-  getRole,
-  createRole,
-  updateRole,
-  deleteRole,
-} from "../controllers/admin/role.controller.js";
-
 import {
   getUsers,
   getUser,
@@ -18,13 +9,14 @@ import {
   updateUser,
   deleteUser,
 } from "../controllers/admin/user.controller.js";
+
 import {
   createInstitution,
   deleteInstitution,
   editInstitution,
   getInstitution,
   getInstitutions,
-} from "../controllers/institution.controller.js";
+} from "../controllers/admin/institution.controller.js";
 
 const adminRouter = Router();
 
@@ -44,17 +36,5 @@ adminRouter.get("/users/:id", getUser);
 adminRouter.post("/users", createUser);
 adminRouter.put("/users/:id", updateUser);
 adminRouter.delete("/users/:id", deleteUser);
-
-// Role management
-adminRouter.get("/roles", getRoles);
-adminRouter.get("/roles/:id", getRole);
-adminRouter.post("/roles", createRole);
-adminRouter.put("/roles/:id", updateRole);
-adminRouter.delete("/roles/:id", deleteRole);
-
-// System statistics
-adminRouter.get("/statistics", (req, res) => {
-  res.json({ message: "System statistics" });
-});
 
 export default adminRouter;

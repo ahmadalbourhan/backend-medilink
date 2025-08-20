@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authorize from "../middlewares/auth.middleware.js";
-import { requireInstitutionAdmin } from "../middlewares/role.middleware.js";
+import patientAuthorize from "../middlewares/patientAuth.middleware.js";
+import { requireAdminOrInstitution } from "../middlewares/role.middleware.js";
 
 import {
   getMedicalRecords,
@@ -14,10 +15,14 @@ import {
 const medicalRecordRouter = Router();
 
 // Public endpoint for patients to access their own records
-medicalRecordRouter.get("/patient/:patientId", getPatientMedicalRecords);
+medicalRecordRouter.get(
+  "/patient/:patientId",
+  patientAuthorize,
+  getPatientMedicalRecords
+);
 
 // All other routes require authentication
-medicalRecordRouter.use(authorize, requireInstitutionAdmin);
+medicalRecordRouter.use(authorize, requireAdminOrInstitution);
 
 // Global medical records routes
 medicalRecordRouter.get("/", getMedicalRecords);
