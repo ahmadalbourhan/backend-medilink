@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "admin_institutions"],
+      enum: ["admin", "admin_institutions", "doctor"],
     },
     institutionId: {
       type: mongoose.Schema.Types.ObjectId,

@@ -40,4 +40,5 @@ export const requireInstitutionAdmin = requireRole(["admin_institutions"]);
 export const requireAdminOrInstitution = requireRole([
   "admin",
   "admin_institutions",
+  "doctor",
 ]);

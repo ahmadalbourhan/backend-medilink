@@ -33,7 +33,6 @@ const doctorSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Institution",
-        required: true,
       },
     ],
   },

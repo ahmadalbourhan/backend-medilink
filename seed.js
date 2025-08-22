@@ -146,6 +146,16 @@ const doctors = [
     address: "321 River Drive, Riverside, City",
     institutionIds: [],
   },
+  {
+    name: "Dr. Demo Doctor",
+    email: "doctor@hospital.com",
+    password: "password123",
+    phone: "+1-555-0999",
+    specialization: "General Medicine",
+    licenseNumber: "MD99999",
+    address: "Demo Address, Demo City",
+    institutionIds: [],
+  },
 ];
 
 const patients = [

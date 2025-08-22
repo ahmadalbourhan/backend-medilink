@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../config/env.js";
 
@@ -31,7 +32,18 @@ export const signIn = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    // First try to find a user
+    let user = await User.findOne({ email });
+    let isDoctor = false;
+
+    // If no user found, try to find a doctor
+    if (!user) {
+      const doctor = await Doctor.findOne({ email });
+      if (doctor) {
+        isDoctor = true;
+        user = doctor; // Use doctor as user for consistency
+      }
+    }
 
     if (!user) {
       const error = new Error("User not found");
@@ -47,22 +59,43 @@ export const signIn = async (req, res, next) => {
       throw error;
     }
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+    // Create token payload
+    const tokenPayload = isDoctor
+      ? { userId: user._id, type: "doctor" }
+      : { userId: user._id, type: "user" };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, {
       expiresIn: JWT_EXPIRES_IN,
     });
+
+    // Prepare response data based on user type
+    let userData;
+    if (isDoctor) {
+      userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: "doctor",
+        specialization: user.specialization,
+        licenseNumber: user.licenseNumber,
+        institutionIds: user.institutionIds,
+      };
+    } else {
+      userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        institutionId: user.institutionId,
+      };
+    }
 
     res.status(200).json({
       success: true,
       message: "User signed in successfully",
       data: {
         token,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          institutionId: user.institutionId,
-        },
+        user: userData,
       },
     });
   } catch (error) {
